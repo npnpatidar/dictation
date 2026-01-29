@@ -109,46 +109,22 @@
           ];
 
           postInstall = ''
-            # Create wrapper script that defaults to WTYPE for Wayland
-            mv $out/bin/nerd-dictation $out/bin/.nerd-dictation-unwrapped
+            # Rename original binary
+            mv $out/bin/nerd-dictation $out/bin/.nerd-dictation-original
             
-            cat > $out/bin/nerd-dictation << 'WRAPPER_EOF'
-#!/bin/bash
-# Auto-detect if --simulate-input-tool is not specified and default to WTYPE
-args=("$@")
-has_simulate_input=false
-
-for arg in "$@"; do
-  if [[ "$arg" == --simulate-input-tool* ]]; then
-    has_simulate_input=true
-    break
-  fi
-done
-
-if [ "$has_simulate_input" = false ] && [ "$1" = "begin" ]; then
-  # Default to WTYPE for Wayland
-  args=("$1" --simulate-input-tool=WTYPE "''${@:2}")
-fi
-
-exec "$(dirname "$0")/.nerd-dictation-unwrapped" "''${args[@]}"
-WRAPPER_EOF
-            
-            chmod +x $out/bin/nerd-dictation
-            
-            wrapProgram $out/bin/.nerd-dictation-unwrapped \
+            # Create single wrapper that handles both PATH and WTYPE defaults
+            makeWrapper $out/bin/.nerd-dictation-original $out/bin/nerd-dictation \
               --prefix PATH : ${pkgs.lib.makeBinPath [
               pkgs.sox
-              pkgs.wtype # Wayland
-              pkgs.xdotool # X11 fallback
-            ]}
+              pkgs.wtype
+              pkgs.xdotool
+            ]} \
+              --run 'if [[ "$1" == "begin" ]] && ! [[ " $* " =~ " --simulate-input-tool" ]]; then set -- "$1" --simulate-input-tool=WTYPE "''${@:2}"; fi'
             
             # Install language models
             mkdir -p $out/share/nerd-dictation/models
             ln -s ${vosk-model-en-us} $out/share/nerd-dictation/models/en-us
             ln -s ${vosk-model-de} $out/share/nerd-dictation/models/de
-            
-            # Install helper script as 'dictation'
-            install -Dm755 ${./dictation-helper.sh} $out/bin/dictation
           '';
 
           doCheck = false;
@@ -159,9 +135,99 @@ WRAPPER_EOF
             platforms = platforms.linux;
           };
         };
+
+        # Helper script for easy usage
+        dictation = pkgs.writeShellScriptBin "dictation" ''
+          MODEL_EN="${nerd-dictation}/share/nerd-dictation/models/en-us/vosk-model-small-en-us-0.15"
+          MODEL_DE="${nerd-dictation}/share/nerd-dictation/models/de/vosk-model-small-de-0.15"
+          NERD_DICTATION="${nerd-dictation}/bin/nerd-dictation"
+
+          case "$1" in
+            en|english)
+              echo "Starting English dictation in background..."
+              "$NERD_DICTATION" begin --vosk-model-dir="$MODEL_EN" "''${@:2}" &
+              sleep 2
+              if pgrep -f "nerd-dictation.*begin" > /dev/null; then
+                echo "✓ Dictation is running in background"
+                echo ""
+                echo "Speak into your microphone. Text will be typed where your cursor is."
+                echo ""
+                echo "To stop: dictation stop"
+              else
+                echo "✗ Failed to start dictation"
+              fi
+              ;;
+            de|german|deutsch)
+              echo "Starte deutsche Diktierfunktion im Hintergrund..."
+              "$NERD_DICTATION" begin --vosk-model-dir="$MODEL_DE" "''${@:2}" &
+              sleep 2
+              if pgrep -f "nerd-dictation.*begin" > /dev/null; then
+                echo "✓ Diktierfunktion läuft im Hintergrund"
+                echo ""
+                echo "Sprechen Sie ins Mikrofon. Text wird an der Cursorposition eingegeben."
+                echo ""
+                echo "Zum Stoppen: dictation stop"
+              else
+                echo "✗ Fehler beim Starten"
+              fi
+              ;;
+            stop|end)
+              if pgrep -f "nerd-dictation.*begin" > /dev/null; then
+                echo "Stopping dictation..."
+                "$NERD_DICTATION" end
+                sleep 1
+                echo "✓ Dictation stopped"
+              else
+                echo "No dictation process running"
+              fi
+              ;;
+            status)
+              if pgrep -f "nerd-dictation.*begin" > /dev/null; then
+                echo "✓ Dictation is running"
+                echo ""
+                ps aux | grep -E "[n]erd-dictation.*begin" | head -3
+              else
+                echo "✗ Dictation is not running"
+              fi
+              ;;
+            test)
+              echo "=== Testing dictation (30 second timeout) ==="
+              echo ""
+              echo "1. Click in a text editor or text field"
+              echo "2. Then speak clearly into your microphone"
+              echo "3. Say: 'Hello world, this is a test'"
+              echo "4. The text should appear where your cursor is"
+              echo ""
+              echo "Starting in 3 seconds..."
+              sleep 3
+              "$NERD_DICTATION" begin --vosk-model-dir="$MODEL_EN" --timeout=30 --verbose=1
+              ;;
+            *)
+              echo "Usage: dictation <command> [options]"
+              echo ""
+              echo "Commands:"
+              echo "  en|english  - Start English dictation (runs in background)"
+              echo "  de|german   - Start German dictation (runs in background)"
+              echo "  stop|end    - Stop dictation"
+              echo "  status      - Check if dictation is running"
+              echo "  test        - Run a 30-second test"
+              echo ""
+              echo "Examples:"
+              echo "  dictation en                    # Start English dictation"
+              echo "  dictation en --continuous       # Continuous mode"
+              echo "  dictation de                    # Start German dictation"
+              echo "  dictation status                # Check status"
+              echo "  dictation stop                  # Stop dictation"
+              echo "  dictation test                  # Test mode"
+              echo ""
+              echo "The text will be typed using WTYPE (Wayland) automatically."
+              ;;
+          esac
+        '';
       in {
         packages = {
-          default = nerd-dictation;
+          default = dictation;
+          dictation = dictation;
           nerd-dictation = nerd-dictation;
           vosk-model-en-us = vosk-model-en-us;
           vosk-model-de = vosk-model-de;
@@ -170,11 +236,11 @@ WRAPPER_EOF
         apps = {
           default = {
             type = "app";
-            program = "${nerd-dictation}/bin/dictation";
+            program = "${dictation}/bin/dictation";
           };
           dictation = {
             type = "app";
-            program = "${nerd-dictation}/bin/dictation";
+            program = "${dictation}/bin/dictation";
           };
           nerd-dictation = {
             type = "app";
