@@ -142,10 +142,38 @@
           MODEL_DE="${nerd-dictation}/share/nerd-dictation/models/de/vosk-model-small-de-0.15"
           NERD_DICTATION="${nerd-dictation}/bin/nerd-dictation"
 
+          # Auto-detect available audio input method
+          detect_audio_input() {
+            if command -v pw-cat >/dev/null 2>&1; then
+              echo "PW-CAT"
+            elif command -v parec >/dev/null 2>&1; then
+              echo "PAREC"
+            elif command -v sox >/dev/null 2>&1; then
+              echo "SOX"
+            else
+              echo ""
+            fi
+          }
+
+          AUDIO_INPUT=$(detect_audio_input)
+          
+          if [ -z "$AUDIO_INPUT" ]; then
+            echo "Error: No audio recording tool found!"
+            echo ""
+            echo "Please ensure one of the following is available on your system:"
+            echo "  - PipeWire (provides pw-cat)"
+            echo "  - PulseAudio (provides parec)"
+            echo "  - SoX (provides sox)"
+            echo ""
+            echo "On NixOS, most systems already have PipeWire or PulseAudio."
+            exit 1
+          fi
+
           case "$1" in
             en|english)
               echo "Starting English dictation in background..."
-              "$NERD_DICTATION" begin --vosk-model-dir="$MODEL_EN" "''${@:2}" &
+              echo "Using audio input: $AUDIO_INPUT"
+              "$NERD_DICTATION" begin --vosk-model-dir="$MODEL_EN" --input="$AUDIO_INPUT" "''${@:2}" &
               sleep 2
               if pgrep -f "nerd-dictation.*begin" > /dev/null; then
                 echo "✓ Dictation is running in background"
@@ -159,7 +187,8 @@
               ;;
             de|german|deutsch)
               echo "Starte deutsche Diktierfunktion im Hintergrund..."
-              "$NERD_DICTATION" begin --vosk-model-dir="$MODEL_DE" "''${@:2}" &
+              echo "Verwende Audio-Eingang: $AUDIO_INPUT"
+              "$NERD_DICTATION" begin --vosk-model-dir="$MODEL_DE" --input="$AUDIO_INPUT" "''${@:2}" &
               sleep 2
               if pgrep -f "nerd-dictation.*begin" > /dev/null; then
                 echo "✓ Diktierfunktion läuft im Hintergrund"
@@ -193,6 +222,8 @@
             test)
               echo "=== Testing dictation (30 second timeout) ==="
               echo ""
+              echo "Audio input method: $AUDIO_INPUT"
+              echo ""
               echo "1. Click in a text editor or text field"
               echo "2. Then speak clearly into your microphone"
               echo "3. Say: 'Hello world, this is a test'"
@@ -200,7 +231,7 @@
               echo ""
               echo "Starting in 3 seconds..."
               sleep 3
-              "$NERD_DICTATION" begin --vosk-model-dir="$MODEL_EN" --timeout=30 --verbose=1
+              "$NERD_DICTATION" begin --vosk-model-dir="$MODEL_EN" --input="$AUDIO_INPUT" --timeout=30 --verbose=1
               ;;
             *)
               echo "Usage: dictation <command> [options]"

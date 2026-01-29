@@ -5,10 +5,17 @@ Offline speech-to-text dictation for Linux using Vosk, packaged as a Nix flake w
 ## Features
 
 - ✅ Automatic WTYPE integration for Wayland
+- ✅ Works with your system's audio (PipeWire or PulseAudio)
 - ✅ Pre-bundled en-US and de-DE language models
 - ✅ Easy-to-use helper script
 - ✅ Background operation by default
 - ✅ Ready to use after `nix build` or `nix run`
+
+## Requirements
+
+- A working audio system (PipeWire or PulseAudio)
+  - Most modern NixOS systems have this already
+  - The flake uses your system's audio recording tool (`parec`, `pw-cat`, or `sox`)
 
 ## Quick Start
 
