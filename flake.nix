@@ -40,7 +40,7 @@
 
           src = pkgs.fetchzip {
             url = "https://alphacephei.com/vosk/models/vosk-model-small-hi-${version}.zip";
-            sha256 = "sha256-1c2pd86m1bdj8j5xdlp6a8shjz6ic53xqncjrdjzzg06hmz3i6nq=";
+            sha256 = "sha256-OvxS+5ZzAHR2a2hR/nRXelrM1xBCS4A0aABbs4okAVc=";
             stripRoot = false;
           };
 
