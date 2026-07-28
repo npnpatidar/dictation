@@ -6,14 +6,16 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    flake-utils,
-  }:
+  outputs =
+    { self
+    , nixpkgs
+    , flake-utils
+    ,
+    }:
     flake-utils.lib.eachDefaultSystem (
-      system: let
-        pkgs = import nixpkgs {inherit system;};
+      system:
+      let
+        pkgs = import nixpkgs { inherit system; };
 
         # Vosk language models
         vosk-model-en-us = pkgs.stdenv.mkDerivation rec {
@@ -32,13 +34,13 @@
           '';
         };
 
-        vosk-model-de = pkgs.stdenv.mkDerivation rec {
-          pname = "vosk-model-small-de";
-          version = "0.15";
+        vosk-model-hi = pkgs.stdenv.mkDerivation rec {
+          pname = "vosk-model-small-hi";
+          version = "0.22";
 
           src = pkgs.fetchzip {
-            url = "https://alphacephei.com/vosk/models/vosk-model-small-de-${version}.zip";
-            sha256 = "sha256-3acw1sfI4Y2xptM49bGMKZNBYd9wXflHRVqr+q9BeWE=";
+            url = "https://alphacephei.com/vosk/models/vosk-model-small-hi-${version}.zip";
+            sha256 = "sha256-1c2pd86m1bdj8j5xdlp6a8shjz6ic53xqncjrdjzzg06hmz3i6nq=";
             stripRoot = false;
           };
 
@@ -124,7 +126,7 @@
             # Install language models
             mkdir -p $out/share/nerd-dictation/models
             ln -s ${vosk-model-en-us} $out/share/nerd-dictation/models/en-us
-            ln -s ${vosk-model-de} $out/share/nerd-dictation/models/de
+            ln -s ${vosk-model-hi} $out/share/nerd-dictation/models/hi
           '';
 
           doCheck = false;
@@ -139,7 +141,7 @@
         # Helper script for easy usage
         dictation = pkgs.writeShellScriptBin "dictation" ''
           MODEL_EN="${nerd-dictation}/share/nerd-dictation/models/en-us/vosk-model-small-en-us-0.15"
-          MODEL_DE="${nerd-dictation}/share/nerd-dictation/models/de/vosk-model-small-de-0.15"
+          MODEL_HI="${nerd-dictation}/share/nerd-dictation/models/hi/vosk-model-small-hi-0.22"
           NERD_DICTATION="${nerd-dictation}/bin/nerd-dictation"
 
           # Auto-detect available audio input method
@@ -185,19 +187,19 @@
                 echo "✗ Failed to start dictation"
               fi
               ;;
-            de|german|deutsch)
-              echo "Starte deutsche Diktierfunktion im Hintergrund..."
-              echo "Verwende Audio-Eingang: $AUDIO_INPUT"
-              "$NERD_DICTATION" begin --vosk-model-dir="$MODEL_DE" --input="$AUDIO_INPUT" "''${@:2}" &
+            hi|hindi)
+              echo "Starting Hindi dictation in background..."
+              echo "Using audio input: $AUDIO_INPUT"
+              "$NERD_DICTATION" begin --vosk-model-dir="$MODEL_HI" --input="$AUDIO_INPUT" "''${@:2}" &
               sleep 2
               if pgrep -f "nerd-dictation.*begin" > /dev/null; then
-                echo "✓ Diktierfunktion läuft im Hintergrund"
+                echo "✓ Dictation is running in background"
                 echo ""
-                echo "Sprechen Sie ins Mikrofon. Text wird an der Cursorposition eingegeben."
+                echo "Speak into your microphone. Text will be typed where your cursor is."
                 echo ""
-                echo "Zum Stoppen: dictation stop"
+                echo "To stop: dictation stop"
               else
-                echo "✗ Fehler beim Starten"
+                echo "✗ Failed to start dictation"
               fi
               ;;
             stop|end)
@@ -238,7 +240,7 @@
               echo ""
               echo "Commands:"
               echo "  en|english  - Start English dictation (runs in background)"
-              echo "  de|german   - Start German dictation (runs in background)"
+              echo "  hi|hindi    - Start Hindi dictation (runs in background)"
               echo "  stop|end    - Stop dictation"
               echo "  status      - Check if dictation is running"
               echo "  test        - Run a 30-second test"
@@ -246,7 +248,7 @@
               echo "Examples:"
               echo "  dictation en                    # Start English dictation"
               echo "  dictation en --continuous       # Continuous mode"
-              echo "  dictation de                    # Start German dictation"
+              echo "  dictation hi                    # Start Hindi dictation"
               echo "  dictation status                # Check status"
               echo "  dictation stop                  # Stop dictation"
               echo "  dictation test                  # Test mode"
@@ -255,13 +257,14 @@
               ;;
           esac
         '';
-      in {
+      in
+      {
         packages = {
           default = dictation;
           dictation = dictation;
           nerd-dictation = nerd-dictation;
           vosk-model-en-us = vosk-model-en-us;
-          vosk-model-de = vosk-model-de;
+          vosk-model-hi = vosk-model-hi;
         };
 
         apps = {

@@ -4,7 +4,7 @@
 
 The flake now:
 - ✅ Automatically uses **WTYPE** for Wayland (no need to specify it manually)
-- ✅ Includes **en-US** and **de-DE** language models
+- ✅ Includes **en-US** and **hi-IN** language models
 - ✅ Models are pre-downloaded and ready to use
 
 ## Quick Start
@@ -23,8 +23,8 @@ dictation status
 # Stop dictation
 dictation stop
 
-# Start German dictation (runs in background)
-dictation de
+# Start Hindi dictation (runs in background)
+dictation hi
 
 # Test mode (30 seconds, foreground)
 dictation test
@@ -51,10 +51,10 @@ dictation stop
   --vosk-model-dir=./result/share/nerd-dictation/models/en-us/vosk-model-small-en-us-0.15 &
 ```
 
-**German (background):**
+**Hindi (background):**
 ```bash
 ./result/bin/nerd-dictation begin \
-  --vosk-model-dir=./result/share/nerd-dictation/models/de/vosk-model-small-de-0.15 &
+  --vosk-model-dir=./result/share/nerd-dictation/models/hi/vosk-model-small-hi-0.22 &
 ```
 
 **Stop:**

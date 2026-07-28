@@ -6,7 +6,7 @@ Offline speech-to-text dictation for Linux using Vosk, packaged as a Nix flake w
 
 - ✅ Automatic WTYPE integration for Wayland
 - ✅ Works with your system's audio (PipeWire or PulseAudio)
-- ✅ Pre-bundled en-US and de-DE language models
+- ✅ Pre-bundled en-US and hi-IN language models
 - ✅ Easy-to-use helper script
 - ✅ Background operation by default
 - ✅ Ready to use after `nix build` or `nix run`
@@ -25,8 +25,8 @@ Offline speech-to-text dictation for Linux using Vosk, packaged as a Nix flake w
 # Start English dictation
 nix run . -- en
 
-# Start German dictation
-nix run . -- de
+# Start Hindi dictation
+nix run . -- hi
 
 # Check status
 nix run . -- status
@@ -47,8 +47,8 @@ nix build
 # Start English dictation
 ./result/bin/dictation en
 
-# Start German dictation
-./result/bin/dictation de
+# Start Hindi dictation
+./result/bin/dictation hi
 
 # Stop dictation
 ./result/bin/dictation stop
@@ -67,7 +67,7 @@ dictation stop
 
 ## How to Use
 
-1. **Start dictation**: `nix run . -- en` (or `de` for German)
+1. **Start dictation**: `nix run . -- en` (or `hi` for Hindi)
 2. **Click in a text editor** to focus it
 3. **Speak clearly** into your microphone
 4. **Text appears automatically** at your cursor!
@@ -78,7 +78,7 @@ dictation stop
 | Command | Description |
 |---------|-------------|
 | `en` or `english` | Start English dictation (background) |
-| `de` or `german` | Start German dictation (background) |
+| `hi` or `hindi` | Start Hindi dictation (background) |
 | `stop` or `end` | Stop dictation |
 | `status` | Check if dictation is running |
 | `test` | Run 30-second test (foreground) |
@@ -119,7 +119,7 @@ packages:
   - default: nerd-dictation (main package)
   - nerd-dictation: The dictation tool
   - vosk-model-en-us: English language model
-  - vosk-model-de: German language model
+  - vosk-model-hi: Hindi language model
 
 apps:
   - default: dictation (helper script)
@@ -153,7 +153,7 @@ binaries:
 ## Models Included
 
 - **en-US**: vosk-model-small-en-us-0.15 (~40MB)
-- **de-DE**: vosk-model-small-de-0.15 (~45MB)
+- **hi-IN**: vosk-model-small-hi-0.22 (~45MB)
 
 Models are automatically downloaded during build and cached by Nix.
 
