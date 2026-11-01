@@ -60,8 +60,8 @@
             dist = "py3";
             python = "py3";
             abi = "none";
-            platform = if pkgs.stdenv.isAarch64 then "manylinux2014_aarch64" else "manylinux_2_12_x86_64.manylinux2010_x86_64";
-            sha256 = if pkgs.stdenv.isAarch64 then "sha256-VO+0fdiQ5UTp4g8DFkE6zsf4aA0E7AlcYUCrTnAmJwQ=" else "sha256-JeAlCTxDmdcnj1Q1aO2MxUYKw6S/SMI2c6zh4l0mYZ8=";
+            platform = if pkgs.stdenv.hostPlatform.isAarch64 then "manylinux2014_aarch64" else "manylinux_2_12_x86_64.manylinux2010_x86_64";
+            sha256 = if pkgs.stdenv.hostPlatform.isAarch64 then "sha256-VO+0fdiQ5UTp4g8DFkE6zsf4aA0E7AlcYUCrTnAmJwQ=" else "sha256-JeAlCTxDmdcnj1Q1aO2MxUYKw6S/SMI2c6zh4l0mYZ8=";
           };
 
           nativeBuildInputs = [
